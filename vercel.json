@@ -1,0 +1,123 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.imsmethod.com"
+        }
+      ],
+      "destination": "https://imsmethod.com/$1",
+      "permanent": true
+    },
+    {
+      "source": "/index.html",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/services.html",
+      "destination": "/services",
+      "permanent": true
+    },
+    {
+      "source": "/about.html",
+      "destination": "/about",
+      "permanent": true
+    },
+    {
+      "source": "/the-ims-method.html",
+      "destination": "/the-ims-method",
+      "permanent": true
+    },
+    {
+      "source": "/coaching.html",
+      "destination": "/coaching",
+      "permanent": true
+    },
+    {
+      "source": "/recovery-room.html",
+      "destination": "/recovery-room",
+      "permanent": true
+    },
+    {
+      "source": "/memberships.html",
+      "destination": "/memberships",
+      "permanent": true
+    },
+    {
+      "source": "/book.html",
+      "destination": "/book",
+      "permanent": true
+    },
+    {
+      "source": "/faq.html",
+      "destination": "/faq",
+      "permanent": true
+    },
+    {
+      "source": "/contact.html",
+      "destination": "/contact",
+      "permanent": true
+    },
+    {
+      "source": "/blog.html",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/best-personal-trainer-scripps-ranch.html",
+      "destination": "/best-personal-trainer-scripps-ranch",
+      "permanent": true
+    },
+    {
+      "source": "/what-are-cars-joint-health.html",
+      "destination": "/what-are-cars-joint-health",
+      "permanent": true
+    },
+    {
+      "source": "/strength-training-after-50.html",
+      "destination": "/strength-training-after-50",
+      "permanent": true
+    }
+  ]
+}
