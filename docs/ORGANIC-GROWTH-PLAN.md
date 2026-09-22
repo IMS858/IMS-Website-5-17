@@ -1,38 +1,43 @@
-# IMS organic growth plan — September 2026
+# IMS organic growth and capacity plan — September 2026
 
-## Owner-reported baseline
-- 29 new clients over approximately 38 weeks.
-- Approximately one organic inquiry per week; owner personally books inquiries.
-- Four prospects chose another provider.
-- If 29 clients and four lost prospects constitute all decided prospects, conversion among decided prospects is 29/33 = 87.9%. This is not a website conversion rate; verify whether other inquiries remain unaccounted for.
+## Confirmed owner-reported baseline
+- 29 clients acquired over approximately 38 weeks.
+- Approximately one organic inquiry per week; owner books inquiries personally.
+- Four prospects chose elsewhere; reasons unknown.
+- No additional unbooked or unresponsive inquiries reported.
+- 14 of 29 acquired clients are currently active.
+- Two additional ongoing clients can be accepted before more trainers are needed.
+- If 29 acquisitions plus four competitor losses are the complete decided cohort, decided-prospect acquisition = 29/33 = 87.9%; this is not website visitor conversion.
+- Current active share of acquired cohort = 14/29 = 48.3%; this is not a formal retention measure because enrollment dates and program completions are unknown.
 
 ## Verified repository
-Static HTML site, shared assets, Vercel deployment, existing booking page with Vagaro integration, self-check, local-business schema, robots.txt and sitemap.xml. Existing navigation and hero already contain free assessment calls to action. Preserve existing SEO and bookings.
+Static HTML website on Vercel; existing booking page with Vagaro integration, self-check, local business schema, robots.txt, sitemap.xml and existing navigation/hero booking CTAs. Preserve current rankings and booking functionality.
 
-## Priority 1: preserve and measure
-- Establish Google Search Console baseline: organic clicks, impressions, queries and top landing pages.
-- Audit actual booking and contact journeys, Vagaro fallback, image URLs, mobile usability, page speed and accessibility.
-- Record organic inquiry source, inquiry-to-assessment rate, attendance, paid conversion and reasons for choosing alternatives.
-- Do not change working URLs or merge to main without review.
+## Business objective and sequencing
+1. Fill two remaining client spots without disrupting the organic acquisition channel.
+2. Understand outcomes of 15 acquired clients no longer active: program completion, scheduling, price, relocation, dissatisfaction or other; do not assume churn causes.
+3. Create trainer onboarding and capacity plan before accelerating acquisition.
+4. Once additional trainer capacity exists, expand qualified local search demand.
 
-## Priority 2: grow qualified organic inquiries
-- Improve existing coaching and assessment content against validated local search queries.
-- Improve internal links from blog posts to the matching service and assessment page.
-- Check local business schema, Google Business Profile consistency and genuine review links.
-- Avoid duplicative location pages or unverified medical claims.
+## Immediate engineering tasks on this branch
+- Baseline organic queries, landing pages, indexed pages and clicks using Search Console if access granted.
+- Verify live booking widget/fallback, contact/self-check forms, imagery, mobile navigation, accessibility and Core Web Vitals.
+- Add only evidence-backed SEO improvements to existing coaching and assessment content and relevant blog internal links.
+- Instrument consent-respecting events: inquiry, assessment booking completed, assessment attended, paid client.
+- Keep existing URLs, canonicals, sitemap and conversion path; no speculative full redesign.
+- Do not expose or alter API keys or claim legal/medical compliance.
 
-## Priority 3: conversion experiments
-- Test headline clarity and assessment expectations against the current high-converting journey.
-- Separate in-person assessment and online self-check CTAs.
-- Instrument actual completed bookings rather than treating button clicks as leads.
+## Capacity and retention operations
+- Track inquiry date, source, booked/attended, purchased, training frequency, active status and reason for departure where voluntarily provided.
+- Identify repeatable trainer processes: assessment protocol, programming templates, progress review, client communication, escalation/referral boundaries.
+- Determine trainer hiring trigger, schedule coverage and quality standards before increasing lead volume.
 
-## Owner information needed
-1. Are the 29 all paying clients, and how many are still active?
-2. Were the four competitor losses the only other decided prospects? Any unresponsive inquiries?
-3. Available capacity for additional ongoing clients per week.
-4. Reasons given by the four lost prospects, if known.
-5. Read-only Google Search Console and GA4 data or exports.
-6. Confirm Vagaro booking and current offers/pricing.
+## Remaining owner inputs
+- Whether all 29 acquired clients were paying (implied, not explicitly confirmed).
+- Approximate join dates and voluntary departure reasons for 15 no longer active, if available.
+- Search Console/GA4 read-only access or exports.
+- Current membership prices and billing policies; verify Vagaro booking works.
+- Trainer economics, timetable and hiring preferences.
 
 ## Safeguards
-Use this branch and pull requests. Test changes before owner-approved merge. No invented results, credentials, prices or testimonials.
+All code changes on a separate branch and draft PR. No merge/deploy without owner review. Preserve current production functionality and authentic brand assets.
