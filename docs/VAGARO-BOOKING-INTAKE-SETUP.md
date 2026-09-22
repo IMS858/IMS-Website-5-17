@@ -34,3 +34,14 @@ Keep intake short; do not ask for detailed diagnoses in an unprotected web form.
 - Exact Vagaro phone-consult booking link after service creation.
 - Whether Vagaro already contains an approved waiver and intake; whether existing assessments currently require it.
 - Whether existing assessment booking should remain free and 30 minutes.
+
+## Confirmed from owner's actual Vagaro notification example (2026-09-22)
+- Existing service is called `Personal Training Consultation`, 30 minutes, assigned to Jason Patterson.
+- Booking email already includes client name, email, phone, appointment date/time and a free-text appointment note.
+- The example note includes age, a general training goal and first-time coaching experience; this shows the current notes field can capture useful context without a separate duplicate website form.
+- Do not store real client identifiers or reproduce actual notification details in repository documentation.
+- Prefer a brief prompt within Vagaro's existing booking notes plus a short secure intake only for information not already captured.
+- Confirm whether the existing approved waiver is already attached and mandatory before adding or changing it.
+- Phone consultation: proposed 15 minutes, pending owner confirmation and creation in Vagaro; no live online phone booking link yet.
+- ChatGPT has no Vagaro connector currently available; owner must configure inside Vagaro or use an authorized browser workflow. Do not claim Vagaro settings were modified.
+- IMS app migration is a separate future workstream; do not switch the booking flow to the app until the app's scheduling, forms, consent and notifications are verified end-to-end.
