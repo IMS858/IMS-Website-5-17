@@ -23,6 +23,7 @@ const MODEL = 'claude-haiku-4-5-20251001';
 const MAX_TOKENS = 700;
 const MAX_TURNS = 20;          // cap conversation length sent upstream
 const MAX_CHARS = 2000;        // per user message
+const MAX_BODY_BYTES = 48_000; // bound JSON parsing and upstream cost
 
 const SYSTEM = `You are the assistant on the website of Innovative Movement Solutions (IMS), a private movement coaching studio in Scripps Ranch, San Diego.
 
@@ -70,6 +71,8 @@ Recovery Room equipment: Normatec 3.0 compression, Sunlighten mPulse infrared sa
 When it fits naturally, suggest booking the free Movement Assessment at /book.html. Do not push it in every message.`;
 
 export default async function handler(req, res) {
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Method not allowed' });
@@ -82,7 +85,18 @@ export default async function handler(req, res) {
   }
 
   try {
+    const declaredLength = Number(req.headers?.['content-length'] || 0);
+    if (declaredLength > MAX_BODY_BYTES) {
+      return res.status(413).json({ error: 'Message too long.' });
+    }
+    if (typeof req.body === 'string' && Buffer.byteLength(req.body, 'utf8') > MAX_BODY_BYTES) {
+      return res.status(413).json({ error: 'Message too long.' });
+    }
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    if (!body || typeof body !== 'object' || Array.isArray(body) ||
+        Buffer.byteLength(JSON.stringify(body), 'utf8') > MAX_BODY_BYTES) {
+      return res.status(413).json({ error: 'Message too long.' });
+    }
     let messages = Array.isArray(body?.messages) ? body.messages : null;
 
     if (!messages || messages.length === 0) {
@@ -115,8 +129,8 @@ export default async function handler(req, res) {
     });
 
     if (!upstream.ok) {
-      const detail = await upstream.text();
-      console.error('Anthropic API error', upstream.status, detail);
+      // Upstream errors can echo private user text: log status only.
+      console.error('Anthropic API error', upstream.status);
       // Never leak upstream error text to the browser.
       return res.status(502).json({
         error: "Sorry — I'm having trouble right now. Please call (619) 937-1434 or use the contact form.",
@@ -133,7 +147,8 @@ export default async function handler(req, res) {
       reply: reply || "I didn't catch that — could you rephrase?",
     });
   } catch (err) {
-    console.error('chat handler failed', err);
+    // Do not log raw request bodies or provider errors containing chat content.
+    console.error('chat handler failed', err instanceof SyntaxError ? 'invalid JSON' : 'request failure');
     return res.status(500).json({
       error: "Sorry — something went wrong. Please call (619) 937-1434.",
     });
