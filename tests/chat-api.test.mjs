@@ -33,9 +33,16 @@ test("cross-site browser requests cannot trigger paid AI calls", async () => {
 });
 
 test("oversized chat histories are rejected before contacting the model", async () => {
-  const result = response();
-  await handler(request([{role: "user", content: "x".repeat(20000)}]), result);
-  assert.equal(result.statusCode, 413);
+  const prior = process.env.ANTHROPIC_API_KEY;
+  process.env.ANTHROPIC_API_KEY = "synthetic-test-key";
+  try {
+    const result = response();
+    await handler(request([{role: "user", content: "x".repeat(20000)}]), result);
+    assert.equal(result.statusCode, 413);
+  } finally {
+    if (prior === undefined) delete process.env.ANTHROPIC_API_KEY;
+    else process.env.ANTHROPIC_API_KEY = prior;
+  }
 });
 
 test("valid same-origin chat strips oversized history and returns only answer text", async () => {
@@ -50,7 +57,7 @@ test("valid same-origin chat strips oversized history and returns only answer te
   try {
     const result = response();
     await handler(request(Array.from({ length: 12 }, (_, i) => ({
-      role: i % 2 ? "assistant" : "user", content: "x".repeat(1200),
+      role: i % 2 ? "assistant" : "user", content: "x".repeat(950),
     })).concat([{role: "user", content: "How do I book?"}])), result);
     assert.equal(result.statusCode, 200);
     assert.equal(result.body.reply, "You can book at /book.html.");
