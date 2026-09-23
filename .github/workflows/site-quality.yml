@@ -13,4 +13,4 @@ jobs:
         with:
           node-version: '22'
       - name: HTML navigation, SEO, accessibility and privacy checks
-        run: node --test tests/site-quality.test.mjs
+        run: node --test tests/*.test.mjs
