@@ -269,7 +269,8 @@
 
           <p class="eyebrow">Want it in writing?</p>
           <h3 class="h3" style="margin-bottom:.8rem">Email me my results</h3>
-          <p class="sc__formnote">We'll send your results plus the <a href="/morning-routine.html">five-minute morning joint routine</a> Jason uses to open every session. No list-selling, and you can unsubscribe from the first email.</p>
+          <p class="sc__formnote">Request a copy of your results and our <a href="/morning-routine.html">five-minute morning joint routine</a>. This form sends your request to IMS; it does not send an instant automated email. Your results above are available without giving us an email address.</p>
+          <p class="sc__formnote">If you submit this request, your contact details and six self-check ratings are sent to IMS through our form provider. Do not include diagnoses or medical records. See our <a href="/privacy.html">privacy policy</a>.</p>
 
           <div class="field">
             <label for="sc-name">First name</label>
@@ -279,7 +280,11 @@
             <label for="sc-email">Email</label>
             <input id="sc-email" name="email" type="email" autocomplete="email" required>
           </div>
-          <button class="btn btn--primary" type="submit">Send me my results</button>
+          <label class="sc__formnote" style="display:flex;align-items:flex-start;gap:.5rem;margin:1rem 0">
+            <input type="checkbox" name="self_check_share_consent" value="yes" required style="margin-top:.2rem">
+            <span>I agree to send my contact details and self-check ratings to IMS so the team can respond to my request.</span>
+          </label>
+          <button class="btn btn--primary" type="submit">Request emailed results</button>
         </form>
       </div>
     </div>

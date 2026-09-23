@@ -21,8 +21,9 @@
 const MODEL = 'claude-haiku-4-5-20251001';
 
 const MAX_TOKENS = 700;
-const MAX_TURNS = 20;          // cap conversation length sent upstream
-const MAX_CHARS = 2000;        // per user message
+const MAX_TURNS = 8;           // cap history and input costs
+const MAX_CHARS = 900;         // per user message
+const MAX_BODY_CHARS = 14000;  // reject oversized inbound requests
 
 const SYSTEM = `You are the assistant on the website of Innovative Movement Solutions (IMS), a private movement coaching studio in Scripps Ranch, San Diego.
 
@@ -75,6 +76,24 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  res.setHeader('Cache-Control', 'private, no-store');
+  // The browser widget is same-origin. A cross-site browser cannot run up
+  // our paid chat endpoint through a forged Origin header.
+  const origin = req.headers.origin;
+  if (origin) {
+    try {
+      if (new URL(origin).host !== req.headers.host) {
+        return res.status(403).json({ error: 'Cross-site requests are not accepted.' });
+      }
+    } catch (_) {
+      return res.status(400).json({ error: 'Invalid request origin.' });
+    }
+  }
+  const declaredLength = Number(req.headers['content-length'] || 0);
+  if (declaredLength > MAX_BODY_CHARS) {
+    return res.status(413).json({ error: 'Message too long.' });
+  }
+
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) {
     console.error('ANTHROPIC_API_KEY is not set');
@@ -83,6 +102,9 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    if (JSON.stringify(body ?? {}).length > MAX_BODY_CHARS) {
+      return res.status(413).json({ error: 'Message too long.' });
+    }
     let messages = Array.isArray(body?.messages) ? body.messages : null;
 
     if (!messages || messages.length === 0) {
@@ -106,6 +128,7 @@ export default async function handler(req, res) {
         'x-api-key': key,
         'anthropic-version': '2023-06-01',
       },
+      signal: AbortSignal.timeout(15000),
       body: JSON.stringify({
         model: MODEL,
         max_tokens: MAX_TOKENS,
@@ -115,8 +138,7 @@ export default async function handler(req, res) {
     });
 
     if (!upstream.ok) {
-      const detail = await upstream.text();
-      console.error('Anthropic API error', upstream.status, detail);
+      console.error('Anthropic API error', upstream.status);
       // Never leak upstream error text to the browser.
       return res.status(502).json({
         error: "Sorry — I'm having trouble right now. Please call (619) 937-1434 or use the contact form.",
