@@ -77,3 +77,12 @@ test("chat request budget, privacy and same-origin checks remain enabled", () =>
   assert.match(widget, /history\.slice\(-8\)/);
   assert.match(widget, /function esc\(/);
 });
+
+test("self-check email request requires consent and discloses its data processor", () => {
+  const source = read("self-check.html");
+  assert.match(source, /name="self_check_share_consent"[^>]*required/);
+  assert.match(source, /href="\/privacy\.html"/);
+  assert.match(source, /third-party|form provider/i);
+  assert.match(read("privacy.html"), /Web3Forms/);
+  assert.match(read("privacy.html"), /Anthropic/);
+});
