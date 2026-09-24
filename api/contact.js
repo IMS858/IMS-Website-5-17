@@ -48,7 +48,7 @@ export default async function handler(req, res) {
       text:`Name: ${name}\\nEmail: ${email}\\nPhone: ${phone}\\n\\n${message}`
     });
     if (!ok) return json(res,502,{error:'Unable to deliver your message'});
-    // Best effort acknowledgement. A failed acknowledgement never masks delivery.
+    // Sync into Coach OS after successful delivery; do not lose an email if Coach OS is temporarily unavailable.\n    if (process.env.IMS_COACH_OS_SYNC_URL && process.env.IMS_WEBSITE_SYNC_SECRET) {\n      try {\n        const sync = await fetch(process.env.IMS_COACH_OS_SYNC_URL, {\n          method: 'POST',\n          headers: { 'Content-Type': 'application/json', 'x-ims-sync-secret': process.env.IMS_WEBSITE_SYNC_SECRET },\n          body: JSON.stringify({ name, email, phone, message }),\n          signal: AbortSignal.timeout(5000)\n        });\n        if (!sync.ok) console.error('[contact] Coach OS sync failed', sync.status);\n      } catch (_) { console.error('[contact] Coach OS sync unavailable'); }\n    }\n    // Best effort acknowledgement. A failed acknowledgement never masks delivery.
     await send(process.env.RESEND_API_KEY,{
       from:FROM,to:[email],reply_to:OWNER,
       subject:'We received your message — IMS',
