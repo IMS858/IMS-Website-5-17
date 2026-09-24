@@ -206,7 +206,7 @@
 
         <div>
           <p class="eyebrow">Send a message</p>
-          <form class="form" action="https://api.web3forms.com/submit" method="POST">
+          <form class="form" action="/api/contact" method="POST">
             <input type="hidden" name="access_key" value="344c4f71-a67a-40f6-b837-c60d362b3d31">
             <input type="hidden" name="subject" value="IMS website enquiry">
             <input type="checkbox" name="botcheck" aria-label="Leave this field empty" aria-hidden="true" style="display:none" tabindex="-1" autocomplete="off">
@@ -227,7 +227,7 @@
               <label for="c-msg">What's going on?</label>
               <textarea id="c-msg" name="message" required></textarea>
             </div>
-            <button class="btn btn--primary" type="submit">Send message</button>
+            <button class="btn btn--primary" type="submit">Send message</button>\n            <p class="form__note" role="status" aria-live="polite" id="contact-status"></p>
             <p class="form__note">Looking to rent practitioner space instead? <a href="/rent-space.html">Use this form</a>.</p>
           </form>
         </div>
@@ -246,6 +246,32 @@
     </div>
   </section>
 
+<script>
+(function () {
+  const form = document.querySelector('form[action="/api/contact"]');
+  if (!form) return;
+  const status = document.getElementById('contact-status');
+  const button = form.querySelector('button[type="submit"]');
+  form.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    button.disabled = true;
+    status.textContent = 'Sending…';
+    try {
+      const response = await fetch(form.action, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.fromEntries(new FormData(form)))
+      });
+      if (!response.ok) throw new Error('send_failed');
+      form.reset();
+      status.textContent = 'Message sent. We’ll get back to you soon.';
+    } catch (_) {
+      status.textContent = 'We couldn’t send your message. Please email admin@imsfitnesscenter.com or call (619) 937-1434.';
+    } finally { button.disabled = false; }
+  });
+})();
+</script>
 </main>
 
 <footer class="site-footer">
