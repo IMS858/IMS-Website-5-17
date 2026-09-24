@@ -1,0 +1,21 @@
+name: Website contact integration
+on:
+  pull_request:
+  push:
+    branches: [main, 'feature/direct-contact-email-2026-09']
+permissions:
+  contents: read
+concurrency:
+  group: website-contact-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  synthetic-contact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Synthetic contact and Coach OS handoff tests (no real sends)
+        run: node --test tests/contact-integration.test.cjs
