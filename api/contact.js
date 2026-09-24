@@ -7,7 +7,7 @@ const OWNER = process.env.CONTACT_INBOX || 'admin@imsfitnesscenter.com';
 const FROM = process.env.RESEND_FROM_EMAIL || 'IMS Website <hello@imsmethod.com>';
 const SITE = 'https://imsmethod.com';
 const escapeHtml = value => String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-const validEmail = value => /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value);
+const validEmail = value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 const json = (res, code, data) => res.status(code).setHeader('Cache-Control','no-store').json(data);
 async function send(key, payload) {
   const response = await fetch('https://api.resend.com/emails', {
@@ -40,12 +40,12 @@ export default async function handler(req, res) {
   const message = String(body.message || '').trim();
   if (!name || !validEmail(email) || !message || message.length > 4000)
     return json(res,400,{error:'Please provide your name, email and a message under 4,000 characters.'});
-  const subject = 'IMS website enquiry — ' + name.replace(/[\\r\\n]/g,' ');
+  const subject = 'IMS website enquiry — ' + name.replace(/[\r\n]/g,' ');
   const html = `<h2>New website enquiry</h2><p><b>Name:</b> ${escapeHtml(name)}</p><p><b>Email:</b> <a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a></p><p><b>Phone:</b> ${escapeHtml(phone || 'Not provided')}</p><p><b>Message:</b></p><p style="white-space:pre-wrap">${escapeHtml(message)}</p><p>Reply directly to this email to reach the visitor.</p>`;
   try {
     const ok = await send(process.env.RESEND_API_KEY,{
       from:FROM,to:[OWNER],reply_to:email,subject,html,
-      text:`Name: ${name}\\nEmail: ${email}\\nPhone: ${phone}\\n\\n${message}`
+      text:`Name: ${name}\nEmail: ${email}\nPhone: ${phone}\n\n${message}`
     });
     if (!ok) return json(res,502,{error:'Unable to deliver your message'});
     // Sync into Coach OS after successful delivery; do not lose an email if Coach OS is temporarily unavailable.\n    if (process.env.IMS_COACH_OS_SYNC_URL && process.env.IMS_WEBSITE_SYNC_SECRET) {\n      try {\n        const sync = await fetch(process.env.IMS_COACH_OS_SYNC_URL, {\n          method: 'POST',\n          headers: { 'Content-Type': 'application/json', 'x-ims-sync-secret': process.env.IMS_WEBSITE_SYNC_SECRET },\n          body: JSON.stringify({ name, email, phone, message }),\n          signal: AbortSignal.timeout(5000)\n        });\n        if (!sync.ok) console.error('[contact] Coach OS sync failed', sync.status);\n      } catch (_) { console.error('[contact] Coach OS sync unavailable'); }\n    }\n    // Best effort acknowledgement. A failed acknowledgement never masks delivery.
@@ -53,7 +53,7 @@ export default async function handler(req, res) {
       from:FROM,to:[email],reply_to:OWNER,
       subject:'We received your message — IMS',
       html:`<p>Hi ${escapeHtml(name.split(' ')[0])},</p><p>Thanks for reaching out to Innovative Movement Solutions. We received your message and will respond personally.</p><p>Jason Patterson · IMS<br><a href="${SITE}">imsmethod.com</a> · (619) 937-1434</p>`,
-      text:`Hi ${name.split(' ')[0]},\\n\\nThanks for reaching out to IMS. We received your message and will respond personally.\\n\\nJason Patterson · IMS\\n(619) 937-1434`
+      text:`Hi ${name.split(' ')[0]},\n\nThanks for reaching out to IMS. We received your message and will respond personally.\n\nJason Patterson · IMS\n(619) 937-1434`
     });
     return json(res,200,{ok:true});
   } catch (error) {
