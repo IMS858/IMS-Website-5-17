@@ -15,7 +15,7 @@
   window.__imsChat = true;
 
   var ENDPOINT = '/api/chat';
-  var MAX_LEN = 2000;
+  var MAX_LEN = 900;
 
   var GREETING =
     "Hi — I can answer questions about coaching, the Recovery Room, pricing, " +
@@ -244,7 +244,7 @@
     fetch(ENDPOINT, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ messages: history.slice(-20) })
+      body: JSON.stringify({ messages: history.slice(-8) })
     })
       .then(function (r) {
         return r.json().then(function (d) { return { ok: r.ok, data: d }; });

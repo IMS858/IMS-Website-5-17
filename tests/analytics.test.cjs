@@ -4,7 +4,7 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 const path=require('node:path');
 const source=fs.readFileSync(path.join(__dirname,'../assets/analytics.js'),'utf8');
-const ID='G-9CYYFYT8ZY',KEY='ims.analytics-consent.v1';
+const ID='G-9CYYFYT8ZY',KEY='ims.analytics-consent.v2';
 function harness(options={}) {
   const nodes=[],events={},windowEvents={},storage=new Map(),deleted=[],writes=[];
   let reloads=0,blocked=options.blocked||false;
@@ -37,3 +37,6 @@ test('existing tags are not replaced or duplicated',()=>{for(const flags of [{ot
 test('failed loader stays failed without automatic retry or false delivery claim',()=>{const h=harness({preference:grant()});h.script().onerror();assert.equal(h.script(),null);assert.equal(h.win['ga-disable-'+ID],true);h.click('ims-analytics-allow');assert.equal(h.script(),null);h.click('ims-analytics-open');assert.match(h.byId('ims-analytics-status').textContent,/failed to load/);});
 test('cross-tab revocation and browser restored pages stop collection',()=>{for(const mode of ['storage','pageshow']){const h=harness({preference:grant()});h.storage.delete(KEY);h.windowEvents[mode](mode==='storage'?{key:KEY}:{persisted:true});assert.equal(h.reloads(),1);assert.equal(h.win['ga-disable-'+ID],true);}});
 test('no user identity, health results, free text or fabricated conversion events are read',()=>{assert.doesNotMatch(source,/\.value\b|FormData|sendBeacon|\buser_id\s*:|\buser_data\s*:|generate_lead|purchase|ims_cta_click/);assert.match(source,/analytics_storage: 'denied'/);assert.match(source,/ad_personalization: 'denied'/);});
+test('chat metrics are consent- and load-gated and never replay earlier actions',()=>{const h=harness();assert.equal(h.win.imsChatMetric('ims_chat_open'),false);h.click('ims-analytics-allow');assert.equal(h.win.imsChatMetric('ims_chat_open'),false);h.script().onload();assert.equal(h.win.imsChatMetric('ims_chat_open'),true);assert.equal(h.queue().filter(q=>q[0]==='event').length,1);h.click('ims-analytics-deny');assert.equal(h.win.imsChatMetric('ims_chat_open'),false);});
+test('chat metrics reject text, payloads and undeclared event names',()=>{const h=harness({preference:grant()});h.script().onload();for(const code of ['private@example.com','purchase','generate_lead','my pain history',null,{}])assert.equal(h.win.imsChatMetric(code),false);assert.equal(h.win.imsChatMetric('ims_chat_open',{message:'private'}),false);assert.equal(h.queue().filter(q=>q[0]==='event').length,0);h.win.imsChatMetric('ims_chat_topic_pricing');const event=h.queue().at(-1);assert.equal(event[1],'ims_chat_topic_pricing');assert.deepEqual(Object.keys(event[2]).sort(),['page_location','page_referrer','page_title','send_to']);});
+test('chat metrics enforce the per-page ceiling and stop if the URL becomes ineligible',()=>{const h=harness({preference:grant()});h.script().onload();for(let i=0;i<50;i++)assert.equal(h.win.imsChatMetric('ims_chat_send'),true);assert.equal(h.win.imsChatMetric('ims_chat_send'),false);const g=harness({preference:grant()});g.script().onload();g.win.location.hash='#private';assert.equal(g.win.imsChatMetric('ims_chat_open'),false);});

@@ -1,30 +1,10 @@
-/**
- * IMS site assistant — /api/chat
- * Vercel serverless function (Node runtime).
- *
- * Replaces the previous endpoint. Two things changed that matter:
- *   1. Current model ID, pinned (see MODEL below).
- *   2. The system prompt now enforces the same compliance rules the
- *      rest of the site follows. A chatbot that gives medical advice
- *      on a site whose footer says "we do not diagnose or treat" is a
- *      bigger liability than no chatbot at all.
- *
- * Environment variable required in Vercel:
- *   ANTHROPIC_API_KEY
- */
-
-// Pinned snapshot. Haiku 4.5 is the right tier for site chat: fast
-// responses matter more than deep reasoning when the job is answering
-// questions about hours, pricing, and what an assessment involves.
-// To upgrade: swap to 'claude-sonnet-5' (higher cost, better nuance).
-// Note the date suffix is required on the Haiku ID.
+/** IMS site assistant. Public website only; bounded requests and private logs. */
 const MODEL = 'claude-haiku-4-5-20251001';
-
 const MAX_TOKENS = 700;
-const MAX_TURNS = 20;          // cap conversation length sent upstream
-const MAX_CHARS = 2000;        // per user message
-const MAX_BODY_BYTES = 48_000; // bound JSON parsing and upstream cost
-
+const MAX_TURNS = 8;
+const MAX_CHARS = 900;
+const MAX_BODY_BYTES = 14000;
+const MAX_BODY_CHARS = 14000;
 const SYSTEM = `You are the assistant on the website of Innovative Movement Solutions (IMS), a private movement coaching studio in Scripps Ranch, San Diego.
 
 # Your job
@@ -69,88 +49,45 @@ Recovery Room equipment: Normatec 3.0 compression, Sunlighten mPulse infrared sa
 
 # Closing
 When it fits naturally, suggest booking the free Movement Assessment at /book.html. Do not push it in every message.`;
-
 export default async function handler(req, res) {
-  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Cache-Control', 'private, no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return res.status(405).json({ error: 'Method not allowed' }); }
+  // These browser and size controls do not replace production edge rate limiting.
+  const origin = req.headers.origin;
+  if (origin) {
+    const allowed = new Set(['https://imsmethod.com', 'https://www.imsmethod.com']);
+    for (const host of [process.env.VERCEL_URL, process.env.VERCEL_BRANCH_URL]) {
+      if (host && /^[a-z0-9.-]+\.vercel\.app$/i.test(host)) allowed.add('https://' + host);
+    }
+    if (!allowed.has(origin)) return res.status(403).json({ error: 'Cross-site requests are not accepted.' });
   }
-
+  if (Number(req.headers['content-length'] || 0) > MAX_BODY_BYTES || typeof req.body === 'string' && (req.body.length > MAX_BODY_CHARS || Buffer.byteLength(req.body, 'utf8') > MAX_BODY_BYTES)) return res.status(413).json({ error: 'Message too long.' });
+  let body;
+  try { body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body; }
+  catch { return res.status(400).json({ error: 'Invalid JSON.' }); }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return res.status(400).json({ error: 'Invalid messages.' });
+  if (Buffer.byteLength(JSON.stringify(body), 'utf8') > MAX_BODY_BYTES) return res.status(413).json({ error: 'Message too long.' });
+  if (!Array.isArray(body.messages) || !body.messages.length) return res.status(400).json({ error: 'No messages provided.' });
+  const messages = body.messages.filter(m => m && ['user', 'assistant'].includes(m.role) && typeof m.content === 'string').slice(-MAX_TURNS).map(m => ({ role: m.role, content: m.content.slice(0, MAX_CHARS) }));
+  if (!messages.length || messages[messages.length - 1].role !== 'user') return res.status(400).json({ error: 'Last message must be from the user.' });
   const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) {
-    console.error('ANTHROPIC_API_KEY is not set');
-    return res.status(500).json({ error: 'Assistant is not configured.' });
-  }
-
+  if (!key) return res.status(503).json({ error: 'Assistant is not configured.' });
   try {
-    const declaredLength = Number(req.headers?.['content-length'] || 0);
-    if (declaredLength > MAX_BODY_BYTES) {
-      return res.status(413).json({ error: 'Message too long.' });
-    }
-    if (typeof req.body === 'string' && Buffer.byteLength(req.body, 'utf8') > MAX_BODY_BYTES) {
-      return res.status(413).json({ error: 'Message too long.' });
-    }
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    if (!body || typeof body !== 'object' || Array.isArray(body) ||
-        Buffer.byteLength(JSON.stringify(body), 'utf8') > MAX_BODY_BYTES) {
-      return res.status(413).json({ error: 'Message too long.' });
-    }
-    let messages = Array.isArray(body?.messages) ? body.messages : null;
-
-    if (!messages || messages.length === 0) {
-      return res.status(400).json({ error: 'No messages provided.' });
-    }
-
-    // Normalise and bound what we forward upstream.
-    messages = messages
-      .filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
-      .slice(-MAX_TURNS)
-      .map(m => ({ role: m.role, content: m.content.slice(0, MAX_CHARS) }));
-
-    if (messages.length === 0 || messages[messages.length - 1].role !== 'user') {
-      return res.status(400).json({ error: 'Last message must be from the user.' });
-    }
-
     const upstream = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: MAX_TOKENS,
-        system: SYSTEM,
-        messages,
-      }),
+      method: 'POST', redirect: 'error', signal: AbortSignal.timeout(15000),
+      headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: MODEL, max_tokens: MAX_TOKENS, system: SYSTEM, messages })
     });
-
     if (!upstream.ok) {
-      // Upstream errors can echo private user text: log status only.
       console.error('Anthropic API error', upstream.status);
-      // Never leak upstream error text to the browser.
-      return res.status(502).json({
-        error: "Sorry — I'm having trouble right now. Please call (619) 937-1434 or use the contact form.",
-      });
+      return res.status(502).json({ error: "Sorry — I'm having trouble right now. Please call (619) 937-1434 or use the contact form." });
     }
-
     const data = await upstream.json();
-
-    const reply = Array.isArray(data.content)
-      ? data.content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim()
-      : '';
-
-    return res.status(200).json({
-      reply: reply || "I didn't catch that — could you rephrase?",
-    });
-  } catch (err) {
-    // Do not log raw request bodies or provider errors containing chat content.
-    console.error('chat handler failed', err instanceof SyntaxError ? 'invalid JSON' : 'request failure');
-    return res.status(500).json({
-      error: "Sorry — something went wrong. Please call (619) 937-1434.",
-    });
+    const reply = Array.isArray(data.content) ? data.content.filter(b => b.type === 'text' && typeof b.text === 'string').map(b => b.text).join('\n').trim() : '';
+    return res.status(200).json({ reply: reply || "I didn't catch that — could you rephrase?" });
+  } catch {
+    console.error('chat handler failed', 'request failure');
+    return res.status(502).json({ error: 'Sorry — something went wrong. Please call (619) 937-1434.' });
   }
 }

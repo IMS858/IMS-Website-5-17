@@ -6,6 +6,17 @@
   script.id = 'ims-analytics-loader';
   script.src = '/assets/analytics.js?v=1';
   script.defer = true;
+  script.onload = function () {
+    var metrics = document.createElement('script');
+    metrics.src = '/assets/chatbot-metrics.js?v=1'; metrics.defer = true;
+    document.head.appendChild(metrics);
+  };
+  document.head.appendChild(script);
+})();
+(function () {
+  if (!/^\/contact(?:\.html)?$/.test(window.location.pathname)) return;
+  var script = document.createElement('script');
+  script.src = '/assets/contact.js?v=1'; script.defer = true;
   document.head.appendChild(script);
 })();
 
