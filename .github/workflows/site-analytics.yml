@@ -1,0 +1,38 @@
+name: Website analytics safety
+on:
+  push:
+    branches: [main, 'feature/ga4-consent-2026-09']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: website-analytics-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Parse checked-in JavaScript
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do node --check "$file"; done < <(git ls-files -z '*.js' '*.cjs')
+      - name: Consent and website regression tests (no network or real analytics events)
+        run: node --test tests/analytics.test.cjs tests/site-analytics-contract.test.cjs
+      - name: Preserve exact checked source
+        run: |
+          git rev-parse HEAD > checked-head.txt
+          git archive HEAD -o website-source.tar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: checked-website-analytics-source
+          path: |
+            checked-head.txt
+            website-source.tar
+          retention-days: 2

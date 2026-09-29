@@ -1,0 +1,16 @@
+/* Scoped consent controls; never affect site navigation, forms or chat layout. */
+#ims-analytics-preferences{position:fixed;left:1rem;bottom:calc(1rem + env(safe-area-inset-bottom,0px));z-index:1100;box-sizing:border-box;width:min(34rem,calc(100vw - 2rem));max-height:70dvh;overflow:auto;overscroll-behavior:contain;padding:1.25rem;border:1px solid #c8d1d9;border-radius:12px;background:#fff;color:#17191c;box-shadow:0 8px 36px #17191c33;font-family:var(--util,system-ui),sans-serif;font-size:16px;line-height:1.5}
+#ims-analytics-preferences[hidden]{display:none!important}
+#ims-analytics-preferences h2{margin:0 0 .6rem;font:700 1.25rem/1.3 var(--util,system-ui),sans-serif;letter-spacing:normal;text-transform:none}
+#ims-analytics-preferences p{margin:.65rem 0;font-size:1rem;line-height:1.5;color:#343c43}
+#ims-analytics-preferences a,.ims-analytics-footer a{color:#1c6290;text-decoration:underline;text-underline-offset:3px}
+#ims-analytics-preferences #ims-analytics-status{font-size:.875rem}
+.ims-analytics-actions{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-top:.8rem}
+.ims-analytics-actions button{min-height:48px;padding:.65rem;border:1px solid #1c6290;border-radius:7px;background:#fff;color:#1c6290;font:600 .9375rem/1.4 var(--util,system-ui),sans-serif;cursor:pointer}
+.ims-analytics-actions button:hover:not(:disabled){background:#ecf3f8}
+.ims-analytics-actions button:disabled{opacity:.6;cursor:not-allowed}
+#ims-analytics-close{grid-column:1/-1;border-color:#bfcad3;color:#343c43}
+.ims-analytics-footer{display:flex;align-items:center;flex-wrap:wrap;gap:.25rem 1.2rem}
+.ims-analytics-footer button{min-height:44px;padding:.5rem 0;border:0;background:transparent;color:inherit;text-decoration:underline;text-underline-offset:3px;font:inherit;cursor:pointer}
+#ims-analytics-preferences:focus-visible,#ims-analytics-preferences button:focus-visible,#ims-analytics-preferences a:focus-visible,.ims-analytics-footer button:focus-visible,.ims-analytics-footer a:focus-visible{outline:3px solid #1c6290;outline-offset:3px}
+@media print{#ims-analytics-preferences,.ims-analytics-footer{display:none!important}}

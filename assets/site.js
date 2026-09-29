@@ -1,3 +1,14 @@
+/* Optional first-party consent UI. This does not load Google or grant consent. */
+(function () {
+  'use strict';
+  if (document.getElementById('ims-analytics-loader')) return;
+  var script = document.createElement('script');
+  script.id = 'ims-analytics-loader';
+  script.src = '/assets/analytics.js?v=1';
+  script.defer = true;
+  document.head.appendChild(script);
+})();
+
 /* IMS — shared behaviour.
    No dependencies. Everything degrades to a working static page. */
 (function () {
