@@ -86,3 +86,47 @@ test("self-check email request requires consent and discloses its data processor
   assert.match(read("privacy.html"), /Web3Forms/);
   assert.match(read("privacy.html"), /Anthropic/);
 });
+
+
+test("the coaching team is visible sitewide without claiming one-coach capacity", () => {
+  for (const page of html) {
+    const source = read(page);
+    if (source.includes('id="navLinks"')) assert.ok(source.includes('href="/coaches.html">Coaches</a>'), page + " coaches navigation");
+    assert.doesNotMatch(source, /one-coach studio|founder and the only coach|sole coach/i, page);
+  }
+  const team = read("coaches.html");
+  assert.match(team, /Jason Patterson/);
+  assert.match(team, /Gabe/);
+  assert.match(team, /Tim/);
+  assert.match(team, /current availability, fit, and rates/);
+  assert.ok(read("sitemap.xml").includes("https://imsmethod.com/coaches.html"));
+});
+
+test("the booking calendar and Recovery Room actions name the correct path", () => {
+  assert.match(read("book.html"), /calendar currently books Jason/);
+  assert.match(read("book.html"), /contact IMS about Gabe or Tim/);
+  assert.ok(read("recovery-room.html").includes("tel:+16199371434"));
+  assert.doesNotMatch(read("recovery-room.html"), /Book a Recovery Room visit/);
+});
+
+test("public assistant facts match the multi-coach website", () => {
+  const api = read("api/chat.js");
+  assert.match(api, /Jason Patterson, Gabe, and Tim/);
+  assert.match(api, /coach-specific rates/);
+  assert.doesNotMatch(api, /founder and the only coach|exactly two things/i);
+  assert.ok(api.includes("/coaches.html"));
+});
+
+test("published memberships are clearly identified as Jason's plans", () => {
+  assert.match(read("memberships.html"), /published membership plans are coached by Jason/);
+  assert.match(read("memberships.html"), /availability and rates with Gabe or Tim/);
+});
+
+
+test("privacy policy reflects the conditionally enabled contact and analytics processors", () => {
+  const policy = read("privacy.html");
+  assert.match(policy, /Resend/);
+  assert.match(policy, /IMS Coach OS/);
+  assert.match(policy, /Google Analytics/);
+  assert.match(policy, /analytics-privacy\.html/);
+});
