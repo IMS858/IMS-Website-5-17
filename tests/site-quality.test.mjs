@@ -97,21 +97,21 @@ test("the coaching team is visible sitewide without claiming one-coach capacity"
   const team = read("coaches.html");
   assert.match(team, /Jason Patterson/);
   assert.match(team, /Gabe/);
-  assert.match(team, /Tim/);
+  assert.doesNotMatch(team, /Tim/);
   assert.match(team, /current openings, coach fit, and rates/);
   assert.ok(read("sitemap.xml").includes("https://imsmethod.com/coaches.html"));
 });
 
 test("the booking calendar and Recovery Room actions name the correct path", () => {
   assert.match(read("book.html"), /calendar currently books Jason/);
-  assert.match(read("book.html"), /contact IMS about Gabe or Tim/);
+  assert.match(read("book.html"), /contact IMS about Gabe/);
   assert.ok(read("recovery-room.html").includes("tel:+16199371434"));
   assert.doesNotMatch(read("recovery-room.html"), /Book a Recovery Room visit/);
 });
 
 test("public assistant facts match the multi-coach website", () => {
   const api = read("api/chat.js");
-  assert.match(api, /Jason Patterson, Gabe, and Tim/);
+  assert.match(api, /Jason Patterson and Gabe/);
   assert.match(api, /coach-specific rates/);
   assert.doesNotMatch(api, /founder and the only coach|exactly two things/i);
   assert.ok(api.includes("/coaches.html"));
@@ -119,7 +119,7 @@ test("public assistant facts match the multi-coach website", () => {
 
 test("published memberships are clearly identified as Jason's plans", () => {
   assert.match(read("memberships.html"), /published membership plans are coached by Jason/);
-  assert.match(read("memberships.html"), /availability and rates with Gabe or Tim/);
+  assert.match(read("memberships.html"), /availability and rates with Gabe/);
 });
 
 
