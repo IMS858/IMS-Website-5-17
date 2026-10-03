@@ -98,7 +98,7 @@ test("the coaching team is visible sitewide without claiming one-coach capacity"
   assert.match(team, /Jason Patterson/);
   assert.match(team, /Gabe/);
   assert.match(team, /Tim/);
-  assert.match(team, /current availability, fit, and rates/);
+  assert.match(team, /current openings, coach fit, and rates/);
   assert.ok(read("sitemap.xml").includes("https://imsmethod.com/coaches.html"));
 });
 
